@@ -21,6 +21,7 @@ export const authOptions = {
         password: { label: 'Password', type: 'password' },
       },
       async authorize(credentials) {
+        console.log('Starting authorization process...')
         try {
           if (!credentials?.email || !credentials?.password) {
             console.log('Missing credentials')
@@ -32,7 +33,9 @@ export const authOptions = {
           console.log('Database connected successfully')
 
           console.log('Looking for user:', credentials.email)
-          const user = await User.findOne({ email: credentials.email })
+          const user = await User.findOne({
+            email: credentials.email,
+          }).maxTimeMS(5000)
           if (!user) {
             console.log('User not found')
             throw new Error('Nu există niciun cont cu acest email')
