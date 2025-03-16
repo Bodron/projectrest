@@ -21,30 +21,43 @@ export const authOptions = {
         password: { label: 'Password', type: 'password' },
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) {
-          throw new Error('Email și parola sunt necesare')
-        }
+        try {
+          if (!credentials?.email || !credentials?.password) {
+            console.log('Missing credentials')
+            throw new Error('Email și parola sunt necesare')
+          }
 
-        await connectDB()
+          console.log('Attempting to connect to database...')
+          await connectDB()
+          console.log('Database connected successfully')
 
-        const user = await User.findOne({ email: credentials.email })
-        if (!user) {
-          throw new Error('Nu există niciun cont cu acest email')
-        }
+          console.log('Looking for user:', credentials.email)
+          const user = await User.findOne({ email: credentials.email })
+          if (!user) {
+            console.log('User not found')
+            throw new Error('Nu există niciun cont cu acest email')
+          }
 
-        const isPasswordMatch = await bcrypt.compare(
-          credentials.password,
-          user.password
-        )
-        if (!isPasswordMatch) {
-          throw new Error('Parolă incorectă')
-        }
+          console.log('User found, comparing passwords')
+          const isPasswordMatch = await bcrypt.compare(
+            credentials.password,
+            user.password
+          )
+          if (!isPasswordMatch) {
+            console.log('Password mismatch')
+            throw new Error('Parolă incorectă')
+          }
 
-        return {
-          id: user._id.toString(),
-          email: user.email,
-          name: user.name,
-          role: user.role,
+          console.log('Authentication successful')
+          return {
+            id: user._id.toString(),
+            email: user.email,
+            name: user.name,
+            role: user.role,
+          }
+        } catch (error) {
+          console.error('Auth error:', error)
+          throw error
         }
       },
     }),
@@ -85,6 +98,7 @@ export const authOptions = {
       },
     },
   },
+  debug: true, // Enable debug logs
 }
 
 export default NextAuth(authOptions)
